@@ -4,7 +4,10 @@
     <meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Image Classification</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+    <link href="https://cdn.bootcss.com/bootstrap/4.0.0/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.bootcss.com/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://cdn.bootcss.com/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
 	
 	<style type="text/css">
 	
@@ -17,7 +20,7 @@
 		 #middle-container { 
 		   
 			border: none;	
-			margin-left: 0px;
+			margin-left: 0px;+++
 			margin-right: 0px;
 			border-radius: 1em;
 		}
@@ -32,6 +35,11 @@
 			height: 40px;
 			border-radius: 2em;
 			font-size: 20px;
+		}
+		
+		.loader { 
+			margin-left: 150px;
+			margin-bottom: 20px;
 		}
 	}
 	
@@ -72,6 +80,11 @@
 		  margin-top: 20px;
 		
 		}
+		
+		.loader { 
+			margin-left: 350px;
+			margin-bottom: 20px;
+		}
 	}
 	
 	.gradient-rule { 
@@ -109,7 +122,32 @@
 		color:#333;
 		font-weight:bold;
 	}
+	
+	.image-preview {
+		
+		
+		position: relative;
+		border: 5px solid #F8F8F8;
+		box-shadow: 0px 2px 4px 0px rgba(0, 0, 0, 0.1);
+		margin-top: 1em;
+		margin-bottom: 1em;
+		
+	}
 
+	.loader {
+		border: 8px solid #f3f3f3; /* Light grey */
+		border-top: 8px solid #3498db; /* Blue */
+		border-radius: 50%;
+		width: 50px;
+		height: 50px;
+		animation: spin 1s linear infinite;
+		
+	}
+
+	@keyframes spin {
+		0% { transform: rotate(0deg); }
+		100% { transform: rotate(360deg); }
+	}
 	
 	</style>
   </head>
@@ -123,20 +161,29 @@
 		<div id="middle-container">
 			<form id="upload" name="upload" method="post" enctype="multipart/form-data">
 				<div style="margin-bottom: 5px;" >
-					<p>Upload File Url: <input type="file" id="fileToUpload" name="file" accept=".png, .jpg, .jpeg"> </p>
+					<p>Upload File: <input type="file" id="fileToUpload" name="file" accept=".png, .jpg, .jpeg"> </p>
                 </div>
             </form>
 				<br/>
+				<div id="uploaded_image" class="image-preview" style="display:none;"></div>
+				<br/>
+				<div class="loader" style="display:none"></div>
+				<br/>
 				<div>
-					<input type="button" id="btn_predict"value="Upload and Predict" class="button-primary"> 
+					<input type="button" id="btn_predict"value="Upload and Predict" class="button-primary" disabled style="background: #e4e7ee; color:black"> 
+				</div>
+				<br/>
+				<div>
+					<a href="javascript:void(0)" id="clear_form">Cancel</a>
 				</div>
 				<br/>
 				<div id="msg"></div>
+				<br/>
 				<div id="result" style="margin-top: 5px; display:none;">
 					<object height="350" width="425">
-						<param name="movie" value="https://www.youtube.com/watch?v=cqyziA30whE">
+						<param name="movie" value="https://www.youtube.com/embed/cqyziA30whE">
 						<param name="wmode" value="transparent">
-						<embed height="350" src="https://www.youtube.com/watch?v=cqyziA30whE" type="application/x-shockwave-flash" width="425" wmode="transparent">
+						<embed height="350" src="https://www.youtube.com/embed/cqyziA30whE" type="application/x-shockwave-flash" width="425" wmode="transparent">
 					</object>
 				</div>
 			
@@ -151,10 +198,12 @@
 		
 
 		function handleFileSelect(evt) {
+			$("#btn_predict").removeAttr("disabled")
+			$("#btn_predict").attr("style", "background: #324c7f; color:#fff");
 		   readURL(evt.target);
 		}
 
-		//document.getElementById('fileToUpload').addEventListener('change', handleFileSelect, false);
+		document.getElementById('fileToUpload').addEventListener('change', handleFileSelect, false);
 
 		function readURL(input) {
 		  if (input.files && input.files[0]) {
@@ -167,7 +216,15 @@
 
 					var img = document.createElement('img');
 					img.src = srcData;
+					img.class = "image-preview";
 					img.crossOrigin = 'Anonymous';
+					
+					$("#uploaded_image").html(img);
+					$("#uploaded_image").show();
+					$("#uploaded_image img").attr("width", "256px");
+					$("#uploaded_image img").attr("height", "256px");
+					
+					
 					
 					img.onload = function () {
 						var canvas = document.createElement('canvas'),
@@ -182,7 +239,7 @@
 						b64 = uri.replace(/^data:image.+;base64,/, '');
 
 						console.log(b64); //-> "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4z8DwHwAFAAH/q842iQAAAABJRU5ErkJggg=="
-						uploadFile(b64);
+						//uploadFile(b64);
 					};
         
 				}
@@ -193,15 +250,15 @@
 		
 		$('#btn_predict').click(function () { 
 		
-		
+			$(this).attr("disabled", "disabled");
+			$(this).attr("style", "background: #e4e7ee; color:black");
+			
+			$(".loader").show();
 		
 			var inputFile = $("#upload")[0];
 			
 			var formData = new FormData(inputFile);
-			// formData.data = input;
-			// formData = JSON.stringify(formData);
 			
-
 			$.ajax({
 				type: 'POST',
 				url: '/predict',
@@ -212,6 +269,9 @@
 				async: true,
 				success: function (data) {
 				    if (data) { 
+						$(".loader").hide();
+						$("#btn_predict").removeAttr("disabled")
+						$("#btn_predict").attr("style", "background: #324c7f; color:#fff");
                         var parsedData = JSON.parse(JSON.parse(data));
                         console.log(parsedData);
                         
@@ -226,11 +286,19 @@
                         console.log('Success!');
                     }
 				},
-        });
-			
-			
+			});
 		});
 	// }
+	
+		$("#clear_form").on("click", function(e)  {
+		
+			e.preventDefault();
+			$("form")[0].reset();
+			$("#uploaded_image").html("");
+			$("#btn_predict").attr("disabled", "disabled");
+			$("#btn_predict").attr("style", "background: #e4e7ee; color:black");
+			$(".loader").hide();
+		}); 
 	
 	</script>
     
